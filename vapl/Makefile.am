@@ -51,16 +51,15 @@ vapl_parser_source_h = \
 	$(NULL)
 
 vapl_parser_cflags = \
-	-DGST_USE_UNSTABLE_API		\
 	-I$(top_srcdir)/gst-libs	\
-	-I$(top_builddir)/gst-libs	\
-	$(GST_BASE_CFLAGS)		\
-	$(GST_CFLAGS)			\
+	-I$(top_srcdir)/gcl		\
+	-I$(top_srcdir)/gcl/glib	\
+	-DGST_USE_UNSTABLE_API		\
 	$(NULL)
 
 vapl_parser_libs = \
-	$(GST_BASE_LIBS)		\
-	$(GST_LIBS)			\
+	$(top_builddir)/gcl/gcl/libgcl_core.la \
+	$(top_builddir)/gcl/gst/libgcl_gstreamer.la \
 	$(NULL)
 
 nodist_EXTRA_libvapl_la_SOURCES		= dummy.c
