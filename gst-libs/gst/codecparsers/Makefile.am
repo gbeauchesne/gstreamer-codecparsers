@@ -1,4 +1,7 @@
-lib_LTLIBRARIES = libgstcodecparsers-@GST_API_VERSION@.la
+lib_LTLIBRARIES =
+if ENABLE_GSTREAMER
+lib_LTLIBRARIES += libgstcodecparsers-@GST_API_VERSION@.la
+endif
 
 libgstcodecparsers_@GST_API_VERSION@_la_SOURCES = \
 	gstmpegvideoparser.c gsth264parser.c gstvc1parser.c gstmpeg4parser.c \

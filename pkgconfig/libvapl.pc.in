@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libvapl
+Description: LibVA Parser Layer
+Version: @LIBVAPL_VERSION@
+Libs: -L${libdir} -lvapl
+Cflags: -I${includedir}

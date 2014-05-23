@@ -9,6 +9,17 @@ m4_if(gst_codecparsers_pre_version, [0], [], [
 m4_append([gst_codecparsers_version], gst_codecparsers_pre_version, [.pre])
 ])
 
+# libvapl version number
+m4_define([libvapl_major_version], [0])
+m4_define([libvapl_minor_version], [5])
+m4_define([libvapl_micro_version], [9])
+m4_define([libvapl_pre_version],   [1])
+m4_define([libvapl_version],
+          [libvapl_major_version.libvapl_minor_version.libvapl_micro_version])
+m4_if(libvapl_pre_version, [0], [], [
+m4_append([libvapl_version], libvapl_pre_version, [.pre])
+])
+
 # glib version number
 m4_define([glib_major_version], [2])
 m4_define([glib_minor_version], [28])
@@ -64,6 +75,16 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])], [
   AC_SUBST(AM_DEFAULT_VERBOSITY)
 ])
 
+AC_ARG_ENABLE([gstreamer],
+    AS_HELP_STRING([--enable-gstreamer],
+                   [enable GStreamer API @<:@default=yes@:>@]),
+    [], [enable_gstreamer="yes"])
+
+AC_ARG_ENABLE([vapl],
+    AS_HELP_STRING([--enable-vapl],
+                   [enable VA Parser Layer API @<:@default=yes@:>@]),
+    [], [enable_vapl="yes"])
+
 dnl Check for tools
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -73,14 +94,18 @@ LT_PREREQ([2.2])
 LT_INIT
 
 dnl Check for GLib
+if test "$enable_gstreamer" = "yes"; then
 GLIB_VERSION_REQUIRED=glib_version
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= $GLIB_VERSION_REQUIRED])
 AC_SUBST(GLIB_VERSION_REQUIRED)
+fi
 
 dnl GStreamer Core
+if test "$enable_gstreamer" = "yes"; then
 PKG_CHECK_MODULES([GST],       [gstreamer-$GST_MAJORMINOR >= gst_version])
 PKG_CHECK_MODULES([GST_BASE],  [gstreamer-base-$GST_MAJORMINOR >= gst_version])
 PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-$GST_MAJORMINOR])
+fi
 
 dnl GST_ALL_LDFLAGS:
 dnl LDFLAGS really should only contain flags, not libs - they get added before
@@ -88,13 +113,32 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
 AC_SUBST(GST_ALL_LDFLAGS)
 
+AM_CONDITIONAL([ENABLE_GSTREAMER], [test "$enable_gstreamer" = "yes"])
+AM_CONDITIONAL([ENABLE_VAPL], [test "$enable_vapl" = "yes"])
+
+LIBVAPL_VERSION=libvapl_version
+AC_SUBST([LIBVAPL_VERSION])
+
+pkgconfigdir="${libdir}/pkgconfig"
+AC_SUBST([pkgconfigdir])
+
 AC_CONFIG_FILES([
     Makefile
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/codecparsers/Makefile
+    pkgconfig/Makefile
+    pkgconfig/libvapl.pc
     tests/Makefile
     tests/check/Makefile
     tests/check/libs/Makefile
+    vapl/Makefile
 ])
 AC_OUTPUT
+
+echo
+echo $PACKAGE configuration summary:
+echo
+echo Enable GStreamer APIs ............ : $enable_gstreamer
+echo Enable VA Parser Layer APIs ...... : $enable_vapl
+echo

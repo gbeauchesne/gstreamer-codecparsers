@@ -1,9 +1,12 @@
-noinst_PROGRAMS = \
+noinst_PROGRAMS =
+if ENABLE_GSTREAMER
+noinst_PROGRAMS +=
 	h264parser	\
 	mpegvideoparser	\
 	vc1parser	\
 	vp8parser	\
 	$(NULL)
+endif
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/gst-libs	\

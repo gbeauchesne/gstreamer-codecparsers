@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 AUTOMAKE_OPTIONS = foreign
 
-SUBDIRS = gst-libs tests
+SUBDIRS = gst-libs vapl pkgconfig tests
 
 # Extra clean files so that maintainer-clean removes *everything*
 MAINTAINERCLEANFILES = \
