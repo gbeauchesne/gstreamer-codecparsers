@@ -124,6 +124,10 @@ AC_SUBST([pkgconfigdir])
 
 AC_CONFIG_FILES([
     Makefile
+    gcl/Makefile
+    gcl/gcl/Makefile
+    gcl/glib/Makefile
+    gcl/gst/Makefile
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/codecparsers/Makefile
