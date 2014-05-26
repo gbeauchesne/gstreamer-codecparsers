@@ -27,4 +27,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/* Visibility attributes */
+#if defined __GNUC__ && __GNUC__ >= 4
+# define VAPL_DLL_PUBLIC __attribute__((visibility("default")))
+# define VAPL_DLL_HIDDEN __attribute__((visibility("hidden")))
+#else
+# define VAPL_DLL_PUBLIC
+# define VAPL_DLL_HIDDEN
+#endif
+
 #endif /* VAPL_CORE_H */

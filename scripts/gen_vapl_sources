@@ -118,6 +118,9 @@ function gen_source() {
     done
     echo >>$ofile
 
+    echo "#pragma GCC visibility push(default)" >>$ofile
+    echo "#include \"$hfile\"" >>$ofile
+    echo "#pragma GCC visibility pop" >>$ofile
     echo "#include \"$cfile\"" >>$ofile
 }
 
@@ -135,7 +138,7 @@ function gen_header() {
     for f in $(extract_externals $hfile); do
         doc=$(extract_comment $cfile $f|filter_comment)
         [[ -n "$doc" ]] && doc="${doc}\\n"
-        perl -pi -e "s|(.+\s+${f}\s+\(.+)|${doc}\n\1|" $PRE_FILE
+        perl -pi -e "s|(.+\s+${f}\s+\(.+)|${doc}VAPL_DLL_PUBLIC;\n\1|" $PRE_FILE
     done
 
     local codec=$(echo "${hfile##*/}" | \
@@ -161,6 +164,7 @@ function gen_header() {
     local includes="#include <vapl\/vapl_core.h>\n"
 
     perl -pi \
+        -e 's/(VAPL_DLL_PUBLIC);/\1/;' \
         -e "s/G_BEGIN_DECLS;/${includes}\n#ifdef __cplusplus\nextern "C" {\n#endif/;" \
         -e 's/G_END_DECLS;/#ifdef __cplusplus\n}\n#endif/;' \
         $ofile

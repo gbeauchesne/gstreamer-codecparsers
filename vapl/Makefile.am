@@ -67,6 +67,7 @@ vapl_parser_cflags = \
 	-I$(top_srcdir)/gcl		\
 	-I$(top_srcdir)/gcl/glib	\
 	-DGST_USE_UNSTABLE_API		\
+	-fvisibility=hidden		\
 	$(NULL)
 
 vapl_parser_libs = \
