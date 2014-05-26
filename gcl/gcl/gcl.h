@@ -30,6 +30,5 @@
 #include <gcl/gcl_messages.h>
 #include <gcl/gcl_memory.h>
 #include <gcl/gcl_string.h>
-#include <gcl/gcl_arrays.h>
 
 #endif /* GCL_GCL_H */

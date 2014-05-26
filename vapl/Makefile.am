@@ -54,11 +54,13 @@ gen_source_all_h = $(gen_source_h) $(gen_source_priv_h)
 vapl_parser_source_c = \
 	$(gen_source_c)			\
 	$(gen_vapl_source_c)		\
+	vapl_arrays.c			\
 	$(NULL)
 
 vapl_parser_source_h = \
 	$(gen_source_h)			\
 	$(gen_vapl_source_h)		\
+	vapl_arrays.h			\
 	vapl_core.h			\
 	$(NULL)
 

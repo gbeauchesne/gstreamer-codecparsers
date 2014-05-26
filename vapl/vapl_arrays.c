@@ -1,5 +1,5 @@
 /*
- *  gcl_arrays.c - Array utilities
+ *  vapl_arrays.c - Array utilities
  *
  *  Copyright (C) 2014 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
@@ -20,30 +20,29 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#include <stdlib.h>
-#include "gcl.h"
-#include "gcl_arrays.h"
+#include <gcl/gcl.h>
+#include "vapl_arrays.h"
 
 /* Number of scratch elements for dynamic growth of the arrays */
 #define SCRATCH_ELEMENTS 4
 
 /* --- Fixed-size Arrays -------------------------------------------------- */
 
-#define GCL_ARRAY_PRIVATE(ptr) \
-    ((GclArrayPrivate *)(ptr))
+#define VAPL_ARRAY_PRIVATE(ptr) \
+    ((VaplArrayPrivate *)(ptr))
 
-typedef struct gcl_array_private GclArrayPrivate;
-struct gcl_array_private {
-    GclArray            base;
+typedef struct vapl_array_private VaplArrayPrivate;
+struct vapl_array_private {
+    VaplArray            base;
     uint32_t            element_size;
     uint32_t            max_elements;
     volatile int        ref_count;
 };
 
-GclArray *
-gcl_array_new(uint32_t element_size, uint32_t num_elements)
+VaplArray *
+vapl_array_new(uint32_t element_size, uint32_t num_elements)
 {
-    GclArrayPrivate *array;
+    VaplArrayPrivate *array;
 
     gcl_return_val_if_fail(element_size > 0, NULL);
 
@@ -58,17 +57,17 @@ gcl_array_new(uint32_t element_size, uint32_t num_elements)
     array->base.data = NULL;
     array->max_elements = 0;
     array->element_size = element_size;
-    if (!gcl_array_reserve(&array->base, num_elements))
+    if (!vapl_array_reserve(&array->base, num_elements))
         goto error;
     return &array->base;
 
 error:
-    gcl_array_free(&array->base);
+    vapl_array_free(&array->base);
     return NULL;
 }
 
 void
-gcl_array_free(GclArray *array)
+vapl_array_free(VaplArray *array)
 {
     if (!array)
         return;
@@ -76,28 +75,28 @@ gcl_array_free(GclArray *array)
     free(array);
 }
 
-GclArray *
-gcl_array_ref(GclArray *base_array)
+VaplArray *
+vapl_array_ref(VaplArray *base_array)
 {
-    GclArrayPrivate * const array = GCL_ARRAY_PRIVATE(base_array);
+    VaplArrayPrivate * const array = VAPL_ARRAY_PRIVATE(base_array);
 
     ++array->ref_count;
     return base_array;
 }
 
 void
-gcl_array_unref(GclArray *base_array)
+vapl_array_unref(VaplArray *base_array)
 {
-    GclArrayPrivate * const array = GCL_ARRAY_PRIVATE(base_array);
+    VaplArrayPrivate * const array = VAPL_ARRAY_PRIVATE(base_array);
 
     if (--array->ref_count == 0)
-        gcl_array_free(base_array);
+        vapl_array_free(base_array);
 }
 
 bool
-gcl_array_reserve(GclArray *base_array, uint32_t num_elements)
+vapl_array_reserve(VaplArray *base_array, uint32_t num_elements)
 {
-    GclArrayPrivate * const array = GCL_ARRAY_PRIVATE(base_array);
+    VaplArrayPrivate * const array = VAPL_ARRAY_PRIVATE(base_array);
     void **new_elements;
 
     if (!array)
@@ -118,13 +117,13 @@ gcl_array_reserve(GclArray *base_array, uint32_t num_elements)
 }
 
 bool
-gcl_array_append(GclArray *base_array, const void *data)
+vapl_array_append(VaplArray *base_array, const void *data)
 {
-    GclArrayPrivate * const array = GCL_ARRAY_PRIVATE(base_array);
+    VaplArrayPrivate * const array = VAPL_ARRAY_PRIVATE(base_array);
 
     gcl_return_val_if_fail(data != NULL, false);
 
-    if (!gcl_array_reserve(base_array, base_array->length + 1))
+    if (!vapl_array_reserve(base_array, base_array->length + 1))
         return false;
 
     memcpy(base_array->data + base_array->length * array->element_size,

@@ -1,5 +1,5 @@
 /*
- *  gcl_arrays.h - Array utilities
+ *  vapl_arrays.h - Array utilities
  *
  *  Copyright (C) 2014 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
@@ -20,38 +20,44 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef GCL_ARRAYS_H
-#define GCL_ARRAYS_H
+#ifndef VAPL_ARRAYS_H
+#define VAPL_ARRAYS_H
 
-#include <gcl/gcl_types.h>
+#include <vapl/vapl_core.h>
 
 /* --- Fixed-size Arrays -------------------------------------------------- */
 
-typedef struct gcl_array GclArray;
-struct gcl_array {
+typedef struct vapl_array VaplArray;
+struct vapl_array {
     void               *data;
     uint32_t            length;
 };
 
-#define gcl_array_index(array, type, index) \
+#define vapl_array_index(array, type, index) \
     (((type *)((array)->data))[index])
 
-GclArray *
-gcl_array_new(uint32_t element_size, uint32_t num_elements);
+VAPL_DLL_PUBLIC
+VaplArray *
+vapl_array_new(uint32_t element_size, uint32_t num_elements);
 
+VAPL_DLL_PUBLIC
 void
-gcl_array_free(GclArray *array);
+vapl_array_free(VaplArray *array);
 
-GclArray *
-gcl_array_ref(GclArray *array);
+VAPL_DLL_PUBLIC
+VaplArray *
+vapl_array_ref(VaplArray *array);
 
+VAPL_DLL_PUBLIC
 void
-gcl_array_unref(GclArray *array);
+vapl_array_unref(VaplArray *array);
 
+VAPL_DLL_PUBLIC
 bool
-gcl_array_reserve(GclArray *base_array, uint32_t num_elements);
+vapl_array_reserve(VaplArray *base_array, uint32_t num_elements);
 
+VAPL_DLL_PUBLIC
 bool
-gcl_array_append(GclArray *array, const void *data);
+vapl_array_append(VaplArray *array, const void *data);
 
-#endif /* GCL_ARRAYS_H */
+#endif /* VAPL_ARRAYS_H */

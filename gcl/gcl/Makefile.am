@@ -4,7 +4,6 @@ noinst_LTLIBRARIES += libgcl_core.la
 endif
 
 source_c = \
-	gcl_arrays.c		\
 	gcl_memory.c		\
 	gcl_messages.c		\
 	gcl_string.c		\
@@ -12,7 +11,6 @@ source_c = \
 
 source_h = \
 	gcl.h			\
-	gcl_arrays.h		\
 	gcl_macros.h		\
 	gcl_memory.h		\
 	gcl_messages.h		\
