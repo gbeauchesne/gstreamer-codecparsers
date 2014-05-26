@@ -22,7 +22,7 @@ source_h = \
 	$(NULL)
 
 libgcl_core_la_SOURCES		= $(source_c)
-libgcl_core_la_CFLAGS		= -I$(top_srcdir)/gcl
+libgcl_core_la_CFLAGS		= -I$(top_srcdir)/gcl -fvisibility=hidden
 libgcl_core_la_LIBADD		= -lpthread
 
 EXTRA_DIST = $(source_h)

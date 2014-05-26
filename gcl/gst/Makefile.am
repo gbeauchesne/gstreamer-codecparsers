@@ -15,7 +15,7 @@ source_h = \
 	$(NULL)
 
 libgcl_gstreamer_la_SOURCES	= $(source_c)
-libgcl_gstreamer_la_CFLAGS	= -I$(top_srcdir)/gcl
+libgcl_gstreamer_la_CFLAGS	= -I$(top_srcdir)/gcl -fvisibility=hidden
 
 EXTRA_DIST = $(source_h)
 
