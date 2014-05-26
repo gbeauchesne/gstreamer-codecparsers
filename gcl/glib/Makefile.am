@@ -8,6 +8,7 @@ source_h = \
 	gmem.h			\
 	gmessages.h		\
 	gslice.h		\
+	gthread.h		\
 	gtypes.h		\
 	gutils.h		\
 	$(NULL)

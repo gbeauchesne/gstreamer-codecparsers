@@ -1,5 +1,5 @@
 /*
- *  glib.h - GCL replacements for GLib APIs
+ *  gcl_thread.c - Thread utilities
  *
  *  Copyright (C) 2014 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
@@ -20,17 +20,21 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef GCL_GLIB_H
-#define GCL_GLIB_H
+#include "gcl_thread.h"
 
-#include <gcl/gcl.h>
-#include <glib/gtypes.h>
-#include <glib/gmacros.h>
-#include <glib/gmem.h>
-#include <glib/gslice.h>
-#include <glib/gmessages.h>
-#include <glib/garray.h>
-#include <glib/gutils.h>
-#include <glib/gthread.h>
+bool
+gcl_once_init_enter(GclOnceInitData *d)
+{
+    pthread_mutex_lock(&d->mutex);
+    if (!*d->value_ptr)
+        return true;
+    pthread_mutex_unlock(&d->mutex);
+    return false;
+}
 
-#endif /* GCL_GLIB_H */
+void
+gcl_once_init_leave(GclOnceInitData *d, uintptr_t value)
+{
+    *d->value_ptr = value;
+    pthread_mutex_unlock(&d->mutex);
+}

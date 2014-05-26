@@ -1,5 +1,5 @@
 /*
- *  glib.h - GCL replacements for GLib APIs
+ *  gcl_thread.h - Thread utilities
  *
  *  Copyright (C) 2014 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
@@ -20,17 +20,29 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef GCL_GLIB_H
-#define GCL_GLIB_H
+#ifndef GCL_THREAD_H
+#define GCL_THREAD_H
 
-#include <gcl/gcl.h>
-#include <glib/gtypes.h>
-#include <glib/gmacros.h>
-#include <glib/gmem.h>
-#include <glib/gslice.h>
-#include <glib/gmessages.h>
-#include <glib/garray.h>
-#include <glib/gutils.h>
-#include <glib/gthread.h>
+#include <pthread.h>
+#include <gcl/gcl_types.h>
 
-#endif /* GCL_GLIB_H */
+typedef struct gcl_once_init_data {
+    uintptr_t *value_ptr;
+    pthread_mutex_t mutex;
+} GclOnceInitData;
+
+// Prepares GclOnceInitData for gcl_once_init_enter()
+#define GCL_DECLARE_ONCE_INIT_DATA(location)                    \
+    static GclOnceInitData g_once_init_data = {                 \
+        location, PTHREAD_MUTEX_INITIALIZER };                  \
+    static const char g_once_init_data_check[                   \
+        1-2*(sizeof(*(location)) != sizeof(uintptr_t))];        \
+    (void)g_once_init_data_check[0]
+
+bool
+gcl_once_init_enter(GclOnceInitData *d);
+
+void
+gcl_once_init_leave(GclOnceInitData *d, uintptr_t value);
+
+#endif /* GCL_THREAD_H */

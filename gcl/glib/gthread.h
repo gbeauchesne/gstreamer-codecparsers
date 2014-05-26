@@ -1,5 +1,5 @@
 /*
- *  glib.h - GCL replacements for GLib APIs
+ *  gthread.h - GCL replacements for <glib/gthread.h>
  *
  *  Copyright (C) 2014 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
@@ -20,17 +20,18 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifndef GCL_GLIB_H
-#define GCL_GLIB_H
+#ifndef GCL_GTHREAD_H
+#define GCL_GTHREAD_H
 
-#include <gcl/gcl.h>
-#include <glib/gtypes.h>
-#include <glib/gmacros.h>
-#include <glib/gmem.h>
-#include <glib/gslice.h>
-#include <glib/gmessages.h>
-#include <glib/garray.h>
-#include <glib/gutils.h>
-#include <glib/gthread.h>
+#include <gcl/gcl_thread.h>
 
-#endif /* GCL_GLIB_H */
+#define g_once_init_enter(location)                     \
+    1) {                                                \
+        GCL_DECLARE_ONCE_INIT_DATA(location);           \
+        if (gcl_once_init_enter(&g_once_init_data)
+
+#define g_once_init_leave(location, value)              \
+        gcl_once_init_leave(&g_once_init_data, value);  \
+    }
+
+#endif /* GCL_GTHREAD_H */
