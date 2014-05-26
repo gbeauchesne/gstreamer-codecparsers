@@ -6,15 +6,11 @@ endif
 codecparsers_srcdir = \
 	$(top_srcdir)/gst-libs/gst/codecparsers
 
+gen_vapl_sources = \
+	$(top_srcdir)/scripts/gen_vapl_sources
+
 gen_source_c = \
 	dboolhuff.c			\
-	gsth264parser.c			\
-	gsth265parser.c			\
-	gstjpegparser.c			\
-	gstmpeg4parser.c		\
-	gstmpegvideoparser.c		\
-	gstvc1parser.c			\
-	gstvp8parser.c			\
 	gstvp8rangedecoder.c		\
 	nalutils.c			\
 	parserutils.c			\
@@ -22,13 +18,6 @@ gen_source_c = \
 	$(NULL)
 
 gen_source_h = \
-	gsth264parser.h			\
-	gsth265parser.h			\
-	gstjpegparser.h			\
-	gstmpeg4parser.h		\
-	gstmpegvideoparser.h		\
-	gstvc1parser.h			\
-	gstvp8parser.h			\
 	$(NULL)
 
 gen_source_priv_h = \
@@ -39,15 +28,38 @@ gen_source_priv_h = \
 	vp8utils.h			\
 	$(NULL)
 
+gen_vapl_source_c = \
+	vapl_h264_parser.c		\
+	vapl_h265_parser.c		\
+	vapl_jpeg_parser.c		\
+	vapl_mpeg4_parser.c		\
+	vapl_mpegvideo_parser.c		\
+	vapl_vc1_parser.c		\
+	vapl_vp8_parser.c		\
+	$(NULL)
+
+gen_vapl_source_h = \
+	vapl_h264_parser.h		\
+	vapl_h265_parser.h		\
+	vapl_jpeg_parser.h		\
+	vapl_mpeg4_parser.h		\
+	vapl_mpegvideo_parser.h		\
+	vapl_vc1_parser.h		\
+	vapl_vp8_parser.h		\
+	$(NULL)
+
 gen_source_all_c = $(gen_source_c)
 gen_source_all_h = $(gen_source_h) $(gen_source_priv_h)
 
 vapl_parser_source_c = \
 	$(gen_source_c)			\
+	$(gen_vapl_source_c)		\
 	$(NULL)
 
 vapl_parser_source_h = \
 	$(gen_source_h)			\
+	$(gen_vapl_source_h)		\
+	vapl_core.h			\
 	$(NULL)
 
 vapl_parser_cflags = \
@@ -82,6 +94,10 @@ $(gen_source_all_c): %.c: $(codecparsers_srcdir)/%.c $(gen_source_all_h)
 	$(LN_S) -f $< $@
 $(gen_source_all_h): %.h: $(codecparsers_srcdir)/%.h
 	$(LN_S) -f $< $@
+$(gen_vapl_source_c): vapl_%_parser.c: $(codecparsers_srcdir)/gst%parser.c $(gen_vapl_sources)
+	$(gen_vapl_sources) --gen-source -o $@ $<
+$(gen_vapl_source_h): vapl_%_parser.h: $(codecparsers_srcdir)/gst%parser.h $(gen_vapl_sources)
+	$(gen_vapl_sources) --gen-header -o $@ $<
 
 DISTCLEANFILES = \
 	.timestamp.prepare		\
@@ -89,6 +105,8 @@ DISTCLEANFILES = \
 	.timestamp.headers		\
 	$(gen_source_all_c)		\
 	$(gen_source_all_h)		\
+	$(gen_vapl_source_c)		\
+	$(gen_vapl_source_h)		\
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*

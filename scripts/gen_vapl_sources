@@ -1,0 +1,172 @@
+#!/bin/bash
+#
+# Copyright (C) 2014 Intel Corporation
+#   Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation; either version 2.1
+# of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301 USA
+
+prog="$0"
+progname="${prog##*/}"
+
+# Message logging utilities
+function log_message() {
+    local out="$1" category="$2"
+    shift 2
+    echo $category: ${1+"$@"} >>$out
+}
+
+function warning()      { log_message /dev/stdout warning ${1+"$@"}; }
+function error()        { log_message /dev/stderr error ${1+"$@"}; }
+function fatal_error()  { error ${1+"$@"}; exit 1; }
+
+# Check for tools
+INDENT=$(which indent)
+[[ -x "$INDENT" ]] || \
+    fatal_error "failed to locate GNU indent tool"
+
+# Process command line arguments
+function illegal_option() {
+    fatal_error "illegal option $1"
+}
+
+GEN_MODE="header"
+while getopts ":o:-:" optchar "$@"; do
+    case "$optchar" in
+        (o)                     OFILE="$OPTARG";;
+        (\?)                    illegal_option "-$OPTARG";;
+        (-)
+            optval=${OPTARG#*=}
+            optvar=${OPTARG%=$optval}
+            case "$OPTARG" in
+                (gen-source)    GEN_MODE="source";;
+                (gen-header)    GEN_MODE="header";;
+                (*)             illegal_option "--$optvar";;
+            esac
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+FILE="$1"
+case "$GEN_MODE" in
+    (source) CFILE="$FILE"; HFILE="${CFILE/.c/.h}";;
+    (header) HFILE="$FILE"; CFILE="${HFILE/.h/.c}";;
+esac
+
+[[ -f "$CFILE" ]] || \
+    fatal_error "failed to locate source file \`$CFILE' to process"
+
+[[ -f "$HFILE" ]] || \
+    fatal_error "failed to locate header file \`$HFILE' to process"
+
+[[ -n "$OFILE" ]] || \
+    fatal_error "no output file specified on command line"
+
+API="$(dirname $prog)/API"
+[[ -f "$API" ]] || \
+    fatal_error "failed to locate API definitions"
+
+base_file=${FILE##*/}
+PRE_FILE=$(mktemp --tmpdir ${base_file}.pre.XXXXXX)
+POST_FILE=$(mktemp --tmpdir ${base_file}.post.XXXXXX)
+
+# Extracts externals for the supplied header
+function extract_externals() {
+    local file="$1"
+    local base_file=${hfile##*/}
+
+    perl -ne "/BEGIN:${base_file}/ .. /END:${base_file}/ and print" $API | \
+        grep -v "^#"
+}
+
+# Extract Gtk-doc comment for the supplied token
+function extract_comment() {
+    local file="$1" token="$2"
+
+    perl -0777 -ne "print m!/\*\*[\r\n] \* ${token}:(?:.|[\r\n])*?\*/!g" $file
+}
+
+# Filter comment for perl substitutions
+function filter_comment() {
+    perl -pi -e "s|\n|\\\\n|g;s|'|\\\'|g;s|\@|\\\@|g"
+}
+
+# Generate processed source file
+function gen_source() {
+    local cfile="$1" hfile="$2" ofile="$3"
+
+    echo "/* Generated from GStreamer ${base_file}. Do not edit! */" >$ofile
+    echo >>$ofile
+
+    echo "/* Overrides */" >>$ofile
+    for f in $(extract_externals $hfile); do
+        vf="${f/gst_/vapl_}"
+        echo -e "#define $f \\\\\n    $vf" >>$ofile
+    done
+    echo >>$ofile
+
+    echo "#include \"$cfile\"" >>$ofile
+}
+
+# Generate processed header file
+function gen_header() {
+    local cfile="$1" hfile="$2" ofile="$3"
+
+    echo "/* Generated from GStreamer ${base_file}. Do not edit! */" >$PRE_FILE
+    perl -ne '/^#ifndef GST_USE_UNSTABLE_API/ .. /^#endif/ or /^#include/ or \
+        { s/(G_(BEGIN|END)_DECLS)/\1\;/ } and print' $hfile >>$PRE_FILE
+
+    local doc=$(extract_comment $cfile "SECTION"|filter_comment)
+    perl -pi -e "s|(G_BEGIN_DECLS;)|\1\n\n$doc\n|" $PRE_FILE
+
+    for f in $(extract_externals $hfile); do
+        doc=$(extract_comment $cfile $f|filter_comment)
+        [[ -n "$doc" ]] && doc="${doc}\\n"
+        perl -pi -e "s|(.+\s+${f}\s+\(.+)|${doc}\n\1|" $PRE_FILE
+    done
+
+    local codec=$(echo "${hfile##*/}" | \
+        sed -n "/gst\([a-z][a-z0-9]*\)parser.h/s//\1/p")
+    [[ "$codec" = "mpegvideo" ]] && codec="mpeg"
+
+    perl -p \
+        -e 's/__GST_(\w+)_H__/VAPL_\1_H/g;' \
+        -e 's/\bgst_(\w+)\b/vapl_\1/g;' \
+        -e 's/\bGST_(\w+)\b/VAPL_\1/g;' \
+        -e "s/\bgst${codec}parser\b/vapl${codec}parser/g;" \
+        -e "s/Gst${codec}/Vapl${codec^}/gi;" \
+        -e 's/\bg(u?int)(8|16|32|64)\b/\1\2_t/g;' \
+        -e 's/\bgpointer\b/void \*/g;s/\bgboolean\b/bool/g;' \
+        -e 's/\bgchar\b/char/g;s/\bguchar\b/unsigned char/g;' \
+        -e 's/\bgint\b/int/g;s/\bguint\b/unsigned int/g;' \
+        -e 's/\bgsize\b/size_t/g;s/\bgssize\b/ssize_t/g;' \
+        $PRE_FILE >$POST_FILE
+
+    $INDENT -br -brs -sob -nut -ce -nlp -ci4 -ts8 -hnl -lps $POST_FILE \
+        -o $ofile
+
+    local includes="#include <vapl\/vapl_core.h>\n"
+
+    perl -pi \
+        -e "s/G_BEGIN_DECLS;/${includes}\n#ifdef __cplusplus\nextern "C" {\n#endif/;" \
+        -e 's/G_END_DECLS;/#ifdef __cplusplus\n}\n#endif/;' \
+        $ofile
+}
+
+gen_$GEN_MODE $CFILE $HFILE $OFILE
+
+rm -f $PRE_FILE $POST_FILE
+exit 0
